@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Logger is a middleware that logs HTTP requests using the default slog logger.
 func Logger(next http.HandlerFunc) http.HandlerFunc {
 	logger := slog.Default()
 
@@ -27,6 +28,7 @@ func Logger(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// CustomLogger is a middleware that logs HTTP requests using a custom slog logger.
 func CustomLogger(logger *slog.Logger, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

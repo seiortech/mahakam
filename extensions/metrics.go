@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// Metrics is a struct that holds various Prometheus metrics for HTTP server monitoring.
 type Metrics struct {
 	RequestCounter     *prometheus.CounterVec
 	RequestDuration    *prometheus.HistogramVec
@@ -54,6 +55,7 @@ func NewMetrics() *Metrics {
 	}
 }
 
+// Register registers the metrics with the provided HTTP ServeMux.
 func (m *Metrics) Register(mux *http.ServeMux) error {
 	if mux == nil {
 		return errors.New("mux cannot be nil")
@@ -74,6 +76,7 @@ func (m *Metrics) Register(mux *http.ServeMux) error {
 	return nil
 }
 
+// Unregister unregisters the metrics from Prometheus.
 func (m *Metrics) Unregister() {
 	prometheus.Unregister(m.RequestCounter)
 	prometheus.Unregister(m.RequestDuration)
@@ -84,6 +87,7 @@ func (m *Metrics) Unregister() {
 	prometheus.Unregister(m.ServerUptime)
 }
 
+// StartUptimeTracking starts a goroutine that increments the server uptime metric every second.
 func (m *Metrics) StartUptimeTracking() {
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
@@ -95,6 +99,7 @@ func (m *Metrics) StartUptimeTracking() {
 	}()
 }
 
+// Middleware is an HTTP middleware that collects metrics for incoming requests.
 func (m *Metrics) Middleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

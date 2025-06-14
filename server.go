@@ -12,6 +12,7 @@ import (
 
 type Middleware = func(http.HandlerFunc) http.HandlerFunc
 
+// Server is a custom HTTP server that uses netpoll for handling connections.
 type Server struct {
 	Address      string
 	mux          *http.ServeMux
@@ -19,6 +20,7 @@ type Server struct {
 	ErrorHandler func(http.ResponseWriter, *http.Request, error)
 }
 
+// NewServer creates a new Server instance with the specified address and HTTP ServeMux.
 func NewServer(address string, mux *http.ServeMux) *Server {
 	return &Server{
 		Address: address,
@@ -45,6 +47,7 @@ func NewServer(address string, mux *http.ServeMux) *Server {
 	}
 }
 
+// ListenAndServe starts the server and listens for incoming connections.
 func (s *Server) ListenAndServe() error {
 	listener, err := netpoll.CreateListener("tcp", s.Address)
 	if err != nil {
@@ -105,6 +108,7 @@ func (s *Server) onRequest(ctx context.Context, conn netpoll.Connection) error {
 	return nil
 }
 
+// Use binds middleware functions to the server.
 func (s *Server) Use(middleware ...func(http.HandlerFunc) http.HandlerFunc) {
 	if s.middleware == nil {
 		s.middleware = []func(http.HandlerFunc) http.HandlerFunc{}

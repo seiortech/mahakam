@@ -14,6 +14,7 @@ import (
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
+// Tracer is a struct that holds the OpenTelemetry tracer and its configuration.
 type Tracer struct {
 	ServiceName  string
 	Version      string
@@ -33,6 +34,7 @@ func (t *Tracer) Tracer() oteltrace.Tracer {
 	return t.tracer
 }
 
+// Init initializes the OpenTelemetry tracer.
 func (t *Tracer) Init() func(context.Context) error {
 	exporter, err := otlptrace.New(context.Background(), otlptracegrpc.NewClient(
 		otlptracegrpc.WithInsecure(),
@@ -66,6 +68,7 @@ func (t *Tracer) Init() func(context.Context) error {
 	return exporter.Shutdown
 }
 
+// Middleware is an HTTP middleware that traces requests using OpenTelemetry.
 func (t *Tracer) Middleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := t.Tracer().Start(r.Context(), r.Method+" "+r.URL.Path)

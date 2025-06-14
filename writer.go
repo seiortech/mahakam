@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// RW is a custom ResponseWriter that implements the http.ResponseWriter interface.
 type RW struct {
 	conn       net.Conn
 	headers    http.Header
