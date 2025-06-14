@@ -1,0 +1,10 @@
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+benchmark/
+.devbox/
+example/*/Dockerfile
+example/*/docker-compose.yml
+*.md

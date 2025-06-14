@@ -1,0 +1,29 @@
+services:
+  server:
+    build: 
+        context: ../../
+        dockerfile: example/metrics/Dockerfile
+    restart: always
+    container_name: server
+    platform: linux/aarch64
+    ports:
+      - "8080:8080"
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    ports:
+      - 9090:9090
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+  grafana:
+    image: grafana/grafana:12.0.1
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=raden
+      - GF_SECURITY_ADMIN_PASSWORD=raden123
+    volumes:
+      - ./configs/grafana.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - grafana:/var/lib/grafana
+
+volumes:
+  grafana:
