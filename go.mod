@@ -1,4 +1,4 @@
-module github.com/radenrishwan/mahakam
+module github.com/seiortech/mahakam
 
 go 1.24.3
 

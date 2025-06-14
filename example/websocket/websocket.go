@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/radenrishwan/mahakam"
-	"github.com/radenrishwan/mahakam/websocket"
-	"github.com/radenrishwan/mahakam/websocket/extensions"
+	"github.com/seiortech/mahakam"
+	"github.com/seiortech/mahakam/websocket"
+	"github.com/seiortech/mahakam/websocket/extensions"
 )
 
 const (

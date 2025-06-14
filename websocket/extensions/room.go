@@ -4,7 +4,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/radenrishwan/mahakam/websocket"
+	"github.com/seiortech/mahakam/websocket"
 )
 
 type Message struct {

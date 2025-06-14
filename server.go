@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/cloudwego/netpoll"
-	"github.com/radenrishwan/mahakam/extensions"
+	"github.com/seiortech/mahakam/extensions"
 )
 
 type Middleware = func(http.HandlerFunc) http.HandlerFunc

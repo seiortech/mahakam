@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/radenrishwan/mahakam"
-	"github.com/radenrishwan/mahakam/extensions"
-	"github.com/radenrishwan/mahakam/middleware"
+	"github.com/seiortech/mahakam"
+	"github.com/seiortech/mahakam/extensions"
+	"github.com/seiortech/mahakam/middleware"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
