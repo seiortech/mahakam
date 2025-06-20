@@ -1,6 +1,7 @@
 package extensions
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
@@ -70,6 +71,10 @@ func (c *MapCache) Get(key string) (interface{}, bool) {
 
 // Set adds a value to the cache with a default expiration time.
 func (c *MapCache) Set(key string, value interface{}) error {
+	if value == nil {
+		return errors.New("value cannot be nil")
+	}
+
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
