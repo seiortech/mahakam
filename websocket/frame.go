@@ -5,6 +5,7 @@ import (
 	"errors"
 )
 
+// Frame represents a WebSocket frame.
 type Frame struct {
 	FIN           bool
 	RSV1          bool
@@ -17,6 +18,7 @@ type Frame struct {
 	Payload       []byte
 }
 
+// DecodeFrame decodes a WebSocket frame from the given byte slice.
 func DecodeFrame(data []byte) (Frame, error) {
 	frame := Frame{}
 	offset := 0
@@ -87,6 +89,7 @@ func DecodeFrame(data []byte) (Frame, error) {
 	return frame, nil
 }
 
+// EncodeFrame encodes a WebSocket frame with the given payload and opcode.
 func EncodeFrame(payload []byte, opcode Opcode) ([]byte, error) {
 	msgFrame := make([]byte, 0, 14+len(payload))
 	msgFrame = append(msgFrame, (byte(0x80) | byte(opcode)))

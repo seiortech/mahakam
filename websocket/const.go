@@ -14,6 +14,7 @@ const (
 	PONG         Opcode = 0xA
 )
 
+// status codes for websocket close frames
 const (
 	STATUS_CLOSE_NORMAL_CLOSURE        = 1000
 	STATUS_CLOSE_GOING_AWAY            = 1001

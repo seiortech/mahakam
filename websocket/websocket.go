@@ -8,6 +8,7 @@ import (
 
 type Websocket struct{}
 
+// Upgrade upgrades an HTTP connection to a WebSocket connection.
 func (ws *Websocket) Upgrade(w http.ResponseWriter, r *http.Request) (*Client, error) {
 	if r.Header.Get("Upgrade") != "websocket" {
 		return nil, errors.New("Upgrade header is not websocket")
@@ -42,10 +43,12 @@ func (ws *Websocket) Upgrade(w http.ResponseWriter, r *http.Request) (*Client, e
 	}, nil
 }
 
+// Client represents a WebSocket client connection.
 type Client struct {
 	conn net.Conn
 }
 
+// Read reads a WebSocket frame from the connection.
 func (ws *Client) Read(data []byte) (Frame, int, error) {
 	n, err := ws.conn.Read(data)
 	if err != nil {
@@ -60,6 +63,7 @@ func (ws *Client) Read(data []byte) (Frame, int, error) {
 	return f, n, err
 }
 
+// Write writes a WebSocket frame to the connection with the specified opcode.
 func (ws *Client) Write(data []byte, opcode Opcode) (int, error) {
 	r, err := EncodeFrame(data, opcode)
 	if err != nil {
@@ -69,6 +73,7 @@ func (ws *Client) Write(data []byte, opcode Opcode) (int, error) {
 	return ws.conn.Write(r)
 }
 
+// Close closes the WebSocket connection with a reason and code.
 func (ws *Client) Close(reason []byte, code int) error {
 	payload := make([]byte, 2+len(reason))
 
