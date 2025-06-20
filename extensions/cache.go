@@ -8,11 +8,17 @@ import (
 
 // Cache is an interface that defines methods for caching data.
 type Cache interface {
+	// Get retrieves a value from the cache by key.
 	Get(key string) (interface{}, bool)
+	// Set stores a value in the cache storage with the specified key.
 	Set(key string, value interface{}) error
+	// SetWithExpiration adds a value to the cache with a specific expiration time.
 	SetWithExpiration(key string, value interface{}, expiration int64) error
+	// Delete removes a value from the cache by key.
 	Delete(key string) error
+	// Exists checks if a key exists in the cache.
 	Exists(key string) bool
+	// Close closes the cache storage, releasing any resources it holds.
 	Close() error
 }
 
