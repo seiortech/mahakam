@@ -21,6 +21,7 @@ type Metrics struct {
 	ServerUptime       prometheus.Counter
 }
 
+// NewMetrics initializes and returns a new Metrics instance with all required Prometheus metrics.
 func NewMetrics() *Metrics {
 	return &Metrics{
 		RequestCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -112,9 +113,9 @@ func (m *Metrics) Middleware(next http.HandlerFunc) http.HandlerFunc {
 			m.RequestSize.WithLabelValues(r.URL.Path, r.Method).Observe(requestSize)
 		}
 
-		wrapped := &responseWriter{
+		wrapped := &metricsResponseWriter{
 			ResponseWriter: w,
-			statusCode:     200,
+			statusCode:     http.StatusOK,
 		}
 
 		next.ServeHTTP(wrapped, r)
@@ -135,4 +136,15 @@ func (m *Metrics) Middleware(next http.HandlerFunc) http.HandlerFunc {
 			m.ErrorCounter.WithLabelValues(r.URL.Path, r.Method, fmt.Sprintf("%d", statusCode), errorType).Inc()
 		}
 	})
+}
+
+// responseWriter is a custom http.ResponseWriter that captures the status code and response body for metrics middleware.
+type metricsResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *metricsResponseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
 }
