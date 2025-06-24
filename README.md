@@ -1,5 +1,7 @@
 # Mahakam
 
+[![Official Documentation](https://img.shields.io/badge/mahakam-docs-green?link=https%3A%2F%2Fmahakam-docs.pages.dev%2F)](https://mahakam-docs.pages.dev/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/seiortech/mahakam)](https://goreportcard.com/report/github.com/seiortech/mahakam)
 [![Go Reference](https://pkg.go.dev/badge/github.com/seiortech/mahakam.svg)](https://pkg.go.dev/github.com/seiortech/mahakam)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub Release](https://img.shields.io/github/v/release/seiortech/mahakam)

@@ -1,21 +1,20 @@
 package mahakam
 
 import (
-	"context"
 	"fmt"
-	"net"
 	"net/http"
 
-	"github.com/cloudwego/netpoll"
 	"github.com/seiortech/mahakam/extensions"
 )
 
+// Middleware defines a middleware parameter type for the server.
 type Middleware = func(http.HandlerFunc) http.HandlerFunc
 
 // Server is a custom HTTP server that uses netpoll for handling connections.
 type Server struct {
 	Address      string
 	mux          *http.ServeMux
+	server       NetworkFramework
 	middleware   []Middleware
 	ErrorHandler func(http.ResponseWriter, *http.Request, error)
 }
@@ -25,6 +24,7 @@ func NewServer(address string, mux *http.ServeMux) *Server {
 	return &Server{
 		Address: address,
 		mux:     mux,
+		server:  NETPOLL,
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			validationErr, ok := err.(extensions.ValidationError)
 			if ok {
@@ -49,63 +49,30 @@ func NewServer(address string, mux *http.ServeMux) *Server {
 
 // ListenAndServe starts the server and listens for incoming connections.
 func (s *Server) ListenAndServe() error {
-	listener, err := netpoll.CreateListener("tcp", s.Address)
-	if err != nil {
-		return err
-	}
-
-	defer listener.Close()
-
-	eventLoop, err := netpoll.NewEventLoop(s.onRequest)
-
-	if err != nil {
-		return err
-	}
-
-	if err := eventLoop.Serve(listener); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Server) handleConnection(conn net.Conn) error {
-	defer conn.Close()
-
-	w := NewRW(conn)
-
-	r, err := http.ReadRequest(w.buf.Reader)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		rc := recover()
-		if rc != nil {
-			s.ErrorHandler(w, r, rc.(error))
+	switch s.server {
+	case NETPOLL:
+		s := netpoolFramework{
+			Address:      s.Address,
+			mux:          s.mux,
+			middleware:   s.middleware,
+			ErrorHandler: s.ErrorHandler,
 		}
-	}()
 
-	handler := s.mux.ServeHTTP
-	for i := len(s.middleware) - 1; i >= 0; i-- {
-		handler = s.middleware[i](handler)
+		return s.listenAndServe()
+	case HTTP:
+		s := httpFramework{
+			Address:      s.Address,
+			mux:          s.mux,
+			middleware:   s.middleware,
+			ErrorHandler: s.ErrorHandler,
+		}
+
+		return s.listenAndServe()
+	case NET:
+		return fmt.Errorf("net framework is not supported yet")
+	default:
+		return fmt.Errorf("unsupported server framework: %s", s.server)
 	}
-
-	handler(w, r)
-
-	if err := w.buf.Flush(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Server) onRequest(ctx context.Context, conn netpoll.Connection) error {
-	if err := s.handleConnection(conn); err != nil {
-		s.ErrorHandler(nil, nil, err)
-	}
-
-	return nil
 }
 
 // Use binds middleware functions to the server.
@@ -117,10 +84,34 @@ func (s *Server) Use(middleware ...func(http.HandlerFunc) http.HandlerFunc) {
 	s.middleware = append(s.middleware, middleware...)
 }
 
+// ServeFiles serves static files from the specified root directory using the given pattern.
 func (s *Server) ServeFiles(pattern string, root http.FileSystem) {
 	if s.mux == nil {
 		s.mux = http.NewServeMux()
 	}
 
 	s.mux.Handle(pattern, http.StripPrefix(pattern, http.FileServer(root)))
+}
+
+// Handle binds a handler to a specific pattern in the server's HTTP ServeMux.
+func (s *Server) Handle(pattern string, handler http.Handler) {
+	if s.mux == nil {
+		s.mux = http.NewServeMux()
+	}
+
+	s.mux.Handle(pattern, handler)
+}
+
+// HandleFunc binds a handler function to a specific pattern in the server's HTTP ServeMux.
+func (s *Server) HandleFunc(pattern string, handler http.HandlerFunc) {
+	if s.mux == nil {
+		s.mux = http.NewServeMux()
+	}
+
+	s.mux.HandleFunc(pattern, handler)
+}
+
+// Framework sets the network framework for the server. by default it uses NETPOLL.
+func (s *Server) Framework(framework NetworkFramework) {
+	s.server = framework
 }
