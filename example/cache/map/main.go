@@ -41,8 +41,6 @@ func main() {
 
 			return
 		} else {
-			log.Println("Cache miss for ", name)
-
 			data := response{
 				Id:   int(time.Now().UnixMilli()),
 				Name: name,

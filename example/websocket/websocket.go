@@ -48,7 +48,8 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "example/websocket/index.html")
+		// http.ServeFile(w, r, "index.html")
+		panic("Please use the /ws endpoint to connect to the WebSocket server")
 	})
 
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +117,8 @@ func main() {
 			hf(w, r)
 		}
 	})
+
+	server.Framework(mahakam.NETPOLL)
 
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatalln("Failed to start server:", err)
