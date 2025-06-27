@@ -69,7 +69,14 @@ func (s *Server) ListenAndServe() error {
 
 		return s.listenAndServe()
 	case NET:
-		return fmt.Errorf("net framework is not supported yet")
+		s := netFramework{
+			Address:      s.Address,
+			mux:          s.mux,
+			middleware:   s.middleware,
+			ErrorHandler: s.ErrorHandler,
+		}
+
+		return s.listenAndServe()
 	default:
 		return fmt.Errorf("unsupported server framework: %s", s.server)
 	}
