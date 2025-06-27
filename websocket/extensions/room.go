@@ -15,6 +15,7 @@ type Message struct {
 
 // RoomOption contains options for configuring the behavior of a Room.
 type RoomOption struct {
+	// Determines whether restricted broadcasts are allowed. If allowed, errors are returned instead calling OnError.
 	RestrictedBroadcast bool
 	OnError             func(error)
 	OnEnter             func(Message)
