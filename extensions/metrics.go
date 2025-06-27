@@ -19,6 +19,7 @@ type Metrics struct {
 	ConcurrentRequests prometheus.Gauge
 	ErrorCounter       *prometheus.CounterVec
 	ServerUptime       prometheus.Counter
+	CustomCollectors   []prometheus.Collector
 }
 
 // NewMetrics initializes and returns a new Metrics instance with all required Prometheus metrics.
@@ -53,6 +54,7 @@ func NewMetrics() *Metrics {
 			Name: "http_server_uptime_seconds",
 			Help: "Total uptime of the HTTP server in seconds",
 		}),
+		CustomCollectors: []prometheus.Collector{},
 	}
 }
 
@@ -73,6 +75,16 @@ func (m *Metrics) Register(mux *http.ServeMux) error {
 		m.ErrorCounter,
 		m.ServerUptime,
 	)
+
+	if len(m.CustomCollectors) > 0 {
+		for _, collector := range m.CustomCollectors {
+			if collector == nil {
+				return errors.New("custom collector cannot be nil")
+			}
+
+			prometheus.MustRegister(collector)
+		}
+	}
 
 	return nil
 }
@@ -98,6 +110,12 @@ func (m *Metrics) StartUptimeTracking() {
 			m.ServerUptime.Inc()
 		}
 	}()
+}
+
+// Add allows adding custom Prometheus collectors to the Metrics instance.
+// You must ensure that the collectors are registered before calling Register.
+func (m *Metrics) Add(cs ...prometheus.Collector) {
+	m.CustomCollectors = append(m.CustomCollectors, cs...)
 }
 
 // Middleware is an HTTP middleware that collects metrics for incoming requests.
