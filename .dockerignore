@@ -8,3 +8,4 @@ benchmark/
 example/*/Dockerfile
 example/*/docker-compose.yml
 *.md
+docs/
