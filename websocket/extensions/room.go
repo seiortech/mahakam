@@ -21,6 +21,7 @@ type RoomOption struct {
 	OnEnter             func(Message)
 	OnLeave             func(Message)
 	OnMessage           func(Message)
+	OnClose             func()
 }
 
 // Room represents a chat room that manages clients and broadcasts messages.
@@ -31,6 +32,7 @@ type Room struct {
 	Enter   chan Message
 	Leave   chan Message
 	Message chan Message
+	stop    chan bool
 	Mutex   sync.RWMutex
 }
 
@@ -48,6 +50,8 @@ func NewRoom(name string, option *RoomOption) Room {
 			},
 			OnMessage: func(msg Message) {
 			},
+			OnClose: func() {
+			},
 		}
 	}
 
@@ -58,6 +62,7 @@ func NewRoom(name string, option *RoomOption) Room {
 		Enter:   make(chan Message),
 		Leave:   make(chan Message),
 		Message: make(chan Message),
+		stop:    make(chan bool),
 		Mutex:   sync.RWMutex{},
 	}
 }
@@ -77,6 +82,10 @@ func (r *Room) Run() {
 		case msg := <-r.Message:
 			r.Broadcast(msg.Data, websocket.TEXT)
 			r.Option.OnMessage(msg)
+		case <-r.stop:
+			r.Close()
+			r.Option.OnClose()
+			return
 		}
 	}
 }
@@ -157,6 +166,11 @@ func (r *Room) BroadcastMessage(msg []byte, client *websocket.Client) {
 		Data:   msg,
 		Client: client,
 	}
+}
+
+// Stop stops the room's event loop and cleans up resources.
+func (r *Room) Stop() {
+	r.stop <- true
 }
 
 // Count returns the number of clients currently in the room.
