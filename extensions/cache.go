@@ -1,7 +1,6 @@
 package extensions
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 )
@@ -27,36 +26,6 @@ type CacheEntry struct {
 	ExpiresAt int64 // Unix timestamp in seconds
 }
 
-type cacheResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
-	body       *bytes.Buffer
-}
-
-func newCacheResponseWriter(w http.ResponseWriter) *cacheResponseWriter {
-	return &cacheResponseWriter{
-		ResponseWriter: w,
-		statusCode:     http.StatusOK,
-		body:           new(bytes.Buffer),
-	}
-}
-
-func (rw *cacheResponseWriter) WriteHeader(code int) {
-	rw.statusCode = code
-}
-
-func (rw *cacheResponseWriter) Write(b []byte) (int, error) {
-	return rw.body.Write(b)
-}
-
-func (rw *cacheResponseWriter) flush() {
-	rw.ResponseWriter.WriteHeader(rw.statusCode)
-
-	if rw.body.Len() > 0 {
-		rw.ResponseWriter.Write(rw.body.Bytes())
-	}
-}
-
 // CacheMiddleware is a middleware that provides caching functionality.
 // It used to caching response data for HTTP requests by matching the request path and method.
 // Key pattern that used by this middleware is `"{method}:{path}"`. For example, if the request path is `/api/users/1`, the key will be `GET:/api/users/1`.
@@ -79,14 +48,14 @@ func CacheMiddleware(cache Cache, next http.HandlerFunc) http.HandlerFunc {
 			}
 		}
 
-		wrapped := newCacheResponseWriter(w)
+		wrapped := NewCustomResponseWriter(w)
 		next(wrapped, r)
 
-		capturedBody := wrapped.body.Bytes()
-		if wrapped.statusCode == http.StatusOK && len(capturedBody) > 0 {
+		capturedBody := wrapped.Body.Bytes()
+		if wrapped.StatusCode == http.StatusOK && len(capturedBody) > 0 {
 			cache.Set(key, capturedBody)
 		}
 
-		wrapped.flush()
+		wrapped.Flush()
 	}
 }

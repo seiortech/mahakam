@@ -131,15 +131,12 @@ func (m *Metrics) Middleware(next http.HandlerFunc) http.HandlerFunc {
 			m.RequestSize.WithLabelValues(r.URL.Path, r.Method).Observe(requestSize)
 		}
 
-		wrapped := &metricsResponseWriter{
-			ResponseWriter: w,
-			statusCode:     http.StatusOK,
-		}
+		wrapped := NewCustomResponseWriter(w)
 
 		next.ServeHTTP(wrapped, r)
 
 		duration := time.Since(start).Seconds()
-		statusCode := wrapped.statusCode
+		statusCode := wrapped.StatusCode
 		statusText := http.StatusText(statusCode)
 
 		m.RequestCounter.WithLabelValues(r.URL.Path, r.Method, statusText).Inc()
@@ -154,15 +151,4 @@ func (m *Metrics) Middleware(next http.HandlerFunc) http.HandlerFunc {
 			m.ErrorCounter.WithLabelValues(r.URL.Path, r.Method, fmt.Sprintf("%d", statusCode), errorType).Inc()
 		}
 	})
-}
-
-// responseWriter is a custom http.ResponseWriter that captures the status code and response body for metrics middleware.
-type metricsResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (rw *metricsResponseWriter) WriteHeader(code int) {
-	rw.statusCode = code
-	rw.ResponseWriter.WriteHeader(code)
 }

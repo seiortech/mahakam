@@ -15,6 +15,7 @@ type MapCache struct {
 	stopCleaner chan struct{}
 }
 
+// Create a new MapCache instance with a default TTL.
 func NewMapCache() *MapCache {
 	c := &MapCache{
 		data:        make(map[string]CacheEntry),
