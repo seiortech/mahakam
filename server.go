@@ -156,3 +156,10 @@ func (s *Server) HandleFunc(pattern string, handler http.HandlerFunc) {
 func (s *Server) Framework(framework NetworkFramework) {
 	s.server = framework
 }
+
+// SetTLS enables TLS for the server and sets the certificate and key paths.
+func (s *Server) SetTLS(active bool, certificatePath, keyPath string) {
+	s.TLS = true
+	s.certificatePath = certificatePath
+	s.keyPath = keyPath
+}
