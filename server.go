@@ -1,6 +1,7 @@
 package mahakam
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -12,19 +13,25 @@ type Middleware = func(http.HandlerFunc) http.HandlerFunc
 
 // Server is a custom HTTP server that uses netpoll for handling connections.
 type Server struct {
-	Address      string
-	mux          *http.ServeMux
-	server       NetworkFramework
-	middleware   []Middleware
-	ErrorHandler func(http.ResponseWriter, *http.Request, error)
+	Address         string
+	mux             *http.ServeMux
+	server          NetworkFramework
+	middleware      []Middleware
+	ErrorHandler    func(http.ResponseWriter, *http.Request, error)
+	TLS             bool
+	certificatePath string
+	keyPath         string
 }
 
 // NewServer creates a new Server instance with the specified address and HTTP ServeMux.
 func NewServer(address string, mux *http.ServeMux) *Server {
 	return &Server{
-		Address: address,
-		mux:     mux,
-		server:  NETPOLL,
+		Address:         address,
+		mux:             mux,
+		server:          NETPOLL,
+		TLS:             false,
+		certificatePath: "",
+		keyPath:         "",
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			validationErr, ok := err.(extensions.ValidationError)
 			if ok {
@@ -49,6 +56,20 @@ func NewServer(address string, mux *http.ServeMux) *Server {
 
 // ListenAndServe starts the server and listens for incoming connections.
 func (s *Server) ListenAndServe() error {
+	if s.mux == nil {
+		s.mux = http.NewServeMux()
+	}
+
+	if s.TLS {
+		if s.certificatePath == "" || s.keyPath == "" {
+			return errors.New("certificatePath and keyPath must be set for TLS")
+		}
+
+		if s.server != HTTP {
+			return errors.New("currently only HTTP server supports TLS")
+		}
+	}
+
 	switch s.server {
 	case NETPOLL:
 		s := netpoolFramework{
@@ -60,6 +81,19 @@ func (s *Server) ListenAndServe() error {
 
 		return s.listenAndServe()
 	case HTTP:
+		if s.TLS {
+			s := httpFramework{
+				Address:         s.Address,
+				mux:             s.mux,
+				middleware:      s.middleware,
+				ErrorHandler:    s.ErrorHandler,
+				certificatePath: s.certificatePath,
+				keyPath:         s.keyPath,
+			}
+
+			return s.listenAndServeTLS()
+		}
+
 		s := httpFramework{
 			Address:      s.Address,
 			mux:          s.mux,
