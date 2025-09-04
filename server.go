@@ -64,14 +64,23 @@ func (s *Server) ListenAndServe() error {
 		if s.certificatePath == "" || s.keyPath == "" {
 			return errors.New("certificatePath and keyPath must be set for TLS")
 		}
-
-		if s.server != HTTP {
-			return errors.New("currently only HTTP server supports TLS")
-		}
 	}
 
 	switch s.server {
 	case NETPOLL:
+		if s.TLS {
+			s := netpoolFramework{
+				Address:         s.Address,
+				mux:             s.mux,
+				middleware:      s.middleware,
+				ErrorHandler:    s.ErrorHandler,
+				certificatePath: s.certificatePath,
+				keyPath:         s.keyPath,
+			}
+
+			return s.listenAndServeTLS()
+		}
+
 		s := netpoolFramework{
 			Address:      s.Address,
 			mux:          s.mux,

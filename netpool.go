@@ -2,6 +2,7 @@ package mahakam
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -10,10 +11,12 @@ import (
 )
 
 type netpoolFramework struct {
-	Address      string
-	mux          *http.ServeMux
-	middleware   []Middleware
-	ErrorHandler func(http.ResponseWriter, *http.Request, error)
+	Address         string
+	mux             *http.ServeMux
+	middleware      []Middleware
+	ErrorHandler    func(http.ResponseWriter, *http.Request, error)
+	certificatePath string
+	keyPath         string
 }
 
 func (s *netpoolFramework) listenAndServe() error {
@@ -35,6 +38,46 @@ func (s *netpoolFramework) listenAndServe() error {
 	}
 
 	return nil
+}
+
+func (s *netpoolFramework) listenAndServeTLS() error {
+	// Load the certificate and key
+	cert, err := tls.LoadX509KeyPair(s.certificatePath, s.keyPath)
+	if err != nil {
+		return fmt.Errorf("failed to load certificate: %w", err)
+	}
+
+	// Create TLS config
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	// Create a standard TCP listener first
+	tcpListener, err := net.Listen("tcp", s.Address)
+	if err != nil {
+		return err
+	}
+
+	// Wrap it with TLS
+	tlsListener := tls.NewListener(tcpListener, tlsConfig)
+	defer tlsListener.Close()
+
+	// Create netpoll listener from the TLS listener
+	// Note: We need to handle TLS connections manually since netpoll doesn't directly support TLS wrapping
+	for {
+		conn, err := tlsListener.Accept()
+		if err != nil {
+			return err
+		}
+
+		go func(conn net.Conn) {
+			if err := s.handleConnection(conn); err != nil {
+				if s.ErrorHandler != nil {
+					s.ErrorHandler(nil, nil, err)
+				}
+			}
+		}(conn)
+	}
 }
 
 func (s *netpoolFramework) handleConnection(conn net.Conn) error {
